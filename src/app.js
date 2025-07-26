@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const { routesMap } = require("./routes/index");
+const { userAuthMiddleware } = require('./midddlewares/authMiddlewares');
 
 const app = express();
 
@@ -13,15 +15,11 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
-// Routes
-// const authRoutes = require('./routes/auth.routes');
-// app.use('/api/auth', authRoutes);
+Object.keys(routesMap).forEach((key) => app.use(`/api${key}`, routesMap[key]));
 
-// 404 & Error handler
-// app.use((req, res) => res.status(404).send('Not Found'));
-// app.use(require('./middlewares/errorHandler'));
 
-app.get("/api", async(req, res) => {
+
+app.get("/api", userAuthMiddleware, async(req, res) => {
 	res.send("Hi");
 })
 
