@@ -311,8 +311,247 @@ CREATE TABLE IF NOT EXISTS role_user_mapping (
     branch_mobile_no VARCHAR(15),              -- Changed to VARCHAR to support country codes and leading zeros
     branch_status VARCHAR(20)                  -- e.g., Active, Inactive
 );
+`,
+`CREATE TABLE IF NOT EXISTS otps (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id VARCHAR(36),
+    otp_code VARCHAR(10) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_otp_employee_id FOREIGN KEY (employee_id) REFERENCES employee(emp_id) ON DELETE CASCADE
+);
 `
 ]
 
+const dummyDataQueries = [
+    `INSERT IGNORE INTO employee (
+    emp_id, employee_username, employee_password,
+    first_name, middle_name, last_name, date_of_birth, age, gender,
+    father_full_name, mother_name, marital_status, spouse_name,
+    email_id, mobile_number, education, occupation,
+    curr_address_line_1, curr_address_line_2, curr_pin_code, curr_state, curr_district,
+    curr_city, curr_locality, curr_landmark, curr_latitude, curr_longitude,
+    perm_address_line_1, perm_address_line_2, perm_pin_code, perm_state, perm_district,
+    perm_city, perm_locality, perm_landmark, perm_latitude, perm_longitude,
+    bank_name, type_of_account, ifsc_code, bank_account_number, confirm_bank_account_number,
+    account_holder_name, account_branch_name, user_active, subscription_active, employee_form_status
+    )
+    VALUES
+    -- Row 1
+    ('1a2b3c4d-1111-aaaa-bbbb-cccc12345678', 'john.doe', 'securePass123',
+    'John', 'Michael', 'Doe', '1990-05-10', 34, 'Male',
+    'Robert Doe', 'Maria Doe', 'Married', 'Anna Doe',
+    'john.doe@example.com', '9876543210', 'B.Tech', 'Software Engineer',
+    '123 Main Street', 'Apt 4B', '411001', 'Maharashtra', 'Pune',
+    'Pune', 'Kothrud', 'Near Bus Stop', '18.5204', '73.8567',
+    '456 Other Street', 'House No. 78', '400001', 'Maharashtra', 'Mumbai',
+    'Mumbai', 'Andheri', 'Opp Metro', '19.0760', '72.8777',
+    'HDFC Bank', 'Savings', 'HDFC0000123', '123456789012', '123456789012',
+    'John M Doe', 'Kothrud Branch', TRUE, TRUE, 'Submitted'),
 
-module.exports = createDBqueries;
+    -- Row 2
+    ('2b3c4d5e-2222-bbbb-cccc-dddd23456789', 'jane.smith', 'pass456!',
+    'Jane', 'A.', 'Smith', '1995-08-15', 29, 'Female',
+    'George Smith', 'Lucy Smith', 'Single', '',
+    'jane.smith@example.com', '8765432109', 'MBA', 'HR Manager',
+    '789 South Avenue', 'Flat No. 12', '500081', 'Telangana', 'Hyderabad',
+    'Hyderabad', 'Banjara Hills', 'Near Park', '17.3850', '78.4867',
+    '321 North Street', '', '110001', 'Delhi', 'New Delhi',
+    'New Delhi', 'CP', '', '28.6139', '77.2090',
+    'ICICI Bank', 'Current', 'ICIC0000456', '987654321098', '987654321098',
+    'Jane A Smith', 'Banjara Branch', TRUE, FALSE, 'Pending'),
+    
+    ('3c4d5e6f-3333-cccc-dddd-eeee34567890', 'rahul.verma', 'rahul123!',
+    'Rahul', '', 'Verma', '1992-12-01', 31, 'Male',
+    'Suresh Verma', 'Nina Verma', 'Married', 'Pooja Verma',
+    'rahul.verma@example.com', '9123456780', 'MCA', 'Project Manager',
+    '12 MG Road', '', '560001', 'Karnataka', 'Bangalore',
+    'Bangalore', 'Indiranagar', 'Near Mall', '12.9716', '77.5946',
+    '78 Brigade Road', '', '110075', 'Delhi', 'New Delhi',
+    'New Delhi', 'Dwarka', '', '28.5355', '77.3910',
+    'SBI', 'Savings', 'SBIN0000678', '112233445566', '112233445566',
+    'Rahul Verma', 'Indiranagar Branch', TRUE, TRUE, 'Approved');
+    `,
+
+    `INSERT IGNORE  INTO roles_master (role_id, role)
+    VALUES
+    ('role-001', 'Admin'),
+    ('role-002', 'Employee'),
+    ('role-003', 'Manager');
+    `,
+    `
+    INSERT IGNORE  INTO role_user_mapping (mapping_id, employee_id, role_id)
+    VALUES
+    (1, '1a2b3c4d-1111-aaaa-bbbb-cccc12345678', 'role-001'),  -- John → Admin
+    (2, '2b3c4d5e-2222-bbbb-cccc-dddd23456789', 'role-002'),  -- Jane → Employee
+    (3, '3c4d5e6f-3333-cccc-dddd-eeee34567890', 'role-003');  -- Rahul → Manager
+    `,
+    `
+    INSERT IGNORE  INTO employee_documents_master (document_type, is_verified, is_required)
+    VALUES
+    ('Aadhar Card', FALSE, TRUE),
+    ('PAN Card', FALSE, TRUE),
+    ('Passport', FALSE, FALSE);
+    `,
+    `
+    INSERT IGNORE  INTO employee_docs (employee_id, doc_type_id, document, document_verified)
+    VALUES
+    ('1a2b3c4d-1111-aaaa-bbbb-cccc12345678', 1, x'255044462D312E', TRUE),   -- John → Aadhar
+    ('2b3c4d5e-2222-bbbb-cccc-dddd23456789', 2, x'89504E470D0A1A0A', FALSE), -- Jane → PAN
+    ('3c4d5e6f-3333-cccc-dddd-eeee34567890', 3, x'504B0304', FALSE);         -- Rahul → Passport
+    `,
+    `INSERT IGNORE  INTO loan_leads (
+    lead_id, lead_loan_type, lead_status,
+    lead_creation_date, loan_application_date,
+    customer_name, employee_id,
+    customer_mobile, lead_branch_id, lead_branch_name
+    )
+    VALUES
+    (
+    'lead-001', 'Home Loan', 'Pending',
+    '2025-07-01', '2025-07-05',
+    'Amit Sharma', '1a2b3c4d-1111-aaaa-bbbb-cccc12345678',
+    '9876543210', 'BR001', 'Kothrud Branch'
+    ),
+    (
+    'lead-002', 'Car Loan', 'Approved',
+    '2025-07-10', '2025-07-15',
+    'Priya Desai', '2b3c4d5e-2222-bbbb-cccc-dddd23456789',
+    '9123456789', 'BR002', 'Banjara Hills Branch'
+    );
+    `,
+    `INSERT IGNORE  INTO loan_application_documents_master (document_type, is_verified, is_required)
+    VALUES
+    ('Income Proof', FALSE, TRUE),
+    ('Address Proof', FALSE, TRUE),
+    ('ID Proof', FALSE, TRUE);
+    `,
+    `INSERT IGNORE  INTO loan_application_documents (doc_type_id, employee_id, document, document_verified)
+    VALUES
+    (1, '1a2b3c4d-1111-aaaa-bbbb-cccc12345678', x'255044462D312E', TRUE),   -- Income Proof for John
+    (2, '2b3c4d5e-2222-bbbb-cccc-dddd23456789', x'89504E470D0A1A0A', FALSE), -- Address Proof for Jane
+    (3, '3c4d5e6f-3333-cccc-dddd-eeee34567890', x'504B0304', FALSE);         -- ID Proof for Rahul
+    `,
+    `INSERT IGNORE  INTO personal_loan_form (
+    pers_application_id, lead_id, form_state, product_category, product_name, application_date,
+    applicant_class, request_loan_amount, tenure_months, purpose_of_loan,
+    
+    first_name, middle_name, last_name, date_of_birth, age, gender,
+    mobile_number, email_id, father_full_name, marital_status, education, occupation,
+    
+    pan_card_number, adhar_card_number,
+    employer_name, official_email, working_since, net_monthly_salary, salary_received_mode,
+    designation, job_function, employee_id_number,
+    
+    applicant_bank_name, applicant_bank_account_name,
+    
+    lg_code, lc_code, name_of_case_source_person,
+    source_person_designation, source_employee_id_number, loan_application_number,
+    
+    bene_bank_name, bene_ifsc_code, bene_bank_account_number, bene_confirm_bank_account_number,
+    bene_account_holder_name, bene_branch_name,
+    
+    loan_plan, loan_applied_date, sanctioned_amount, loan_tenure, loan_interest, processing_fee,
+    amount_will_be_credited, total_emis, emi_bouncing_charges, emi_bouncing_gst_18_percent,
+    late_payment_charges, late_payment_gst_18_percent, total_repayment,
+    
+    lender_name, date_of_submission, status, remark, lender_branch_name
+    )
+    VALUES
+    -- Row 1
+    (
+    'plf-001', 'lead-001', 'Maharashtra', 'Personal Loan', 'Flexi Loan', '2025-07-26',
+    'Salaried', 500000, 36, 'Home Renovation',
+    
+    'Amit', 'Kumar', 'Sharma', '1990-04-15', 35, 'Male',
+    '9876543210', 'amit.sharma@example.com', 'Ramesh Sharma', 'Married', 'Graduate', 'Engineer',
+    
+    'ABCDE1234F', '123456789012',
+    'ABC Tech Ltd', 'amit.sharma@abctech.com', '2018-06-01', '60000', 'Bank Transfer',
+    'Senior Engineer', 'IT', 'EMP123456',
+    
+    'HDFC Bank', 'Amit Sharma',
+    
+    1001, 2001, 'Vikas Deshmukh',
+    'Sales Officer', 9001, 4001,
+    
+    'HDFC Bank', 'HDFC0001234', '123456789012', '123456789012',
+    'Amit Sharma', 'Kothrud Branch',
+    
+    'Standard Plan', '2025-07-26', 490000, 36, 12, 5000,
+    485000, 36, 350, 63,
+    500, 90, 550000,
+    
+    'ABC Finance Ltd', '2025-07-26', 'Submitted', 'Initial stage', 'Kothrud'
+    ),
+
+    -- Row 2
+    (
+    'plf-002', 'lead-002', 'Telangana', 'Personal Loan', 'Medical Loan', '2025-07-26',
+    'Self-Employed', 300000, 24, 'Medical Emergency',
+    
+    'Priya', '', 'Desai', '1992-08-10', 32, 'Female',
+    '9123456789', 'priya.desai@example.com', 'Nilesh Desai', 'Single', 'MBA', 'Consultant',
+    
+    'XYZPD5678K', '987654321098',
+    'Desai Consulting', 'priya@desaiconsult.com', '2019-03-01', '85000', 'UPI',
+    'Consultant', 'Finance', 'EMP654321',
+    
+    'ICICI Bank', 'Priya Desai',
+    
+    1002, 2002, 'Megha Kulkarni',
+    'Relationship Manager', 9002, 4002,
+    
+    'ICICI Bank', 'ICIC0000456', '987654321012', '987654321012',
+    'Priya Desai', 'Banjara Hills Branch',
+    
+    'Quick Approval Plan', '2025-07-26', 295000, 24, 10, 4000,
+    291000, 24, 250, 45,
+    400, 72, 320000,
+    
+    'XYZ Finance Pvt Ltd', '2025-07-26', 'In Review', 'Documents pending', 'Banjara Hills'
+    );
+    `,
+    `INSERT IGNORE  INTO branches_master (
+    branch_id, branch_name, branch_address, branch_city,
+    branch_manager, branch_mobile_no, branch_status
+    ) VALUES 
+    (
+        'b1a2c3d4-e5f6-7890-ab12-34567890abcd', 
+        'Pune Central Branch', 
+        '123 FC Road, Shivaji Nagar', 
+        'Pune', 
+        'Rajesh Sharma', 
+        '+919812345678', 
+        'Active'
+    ),
+    (
+        'b2b3c4d5-e6f7-8910-bc23-45678901bcde', 
+        'Mumbai West Branch', 
+        '456 Linking Road, Bandra', 
+        'Mumbai', 
+        'Sneha Desai', 
+        '+919876543210', 
+        'Active'
+    ),
+    (
+        'c3c4d5e6-f7g8-9101-cd34-56789012cdef', 
+        'Nagpur Branch', 
+        '789 Sitabuldi Road', 
+        'Nagpur', 
+        'Amit Joshi', 
+        '+918888555111', 
+        'Inactive'
+    );
+`,
+    `INSERT IGNORE INTO otps (employee_id, otp_code, expires_at)
+    VALUES
+    ('1a2b3c4d-1111-aaaa-bbbb-cccc12345678', '123456', '2025-08-02 14:00:00'),
+    ('1a2b3c4d-1111-aaaa-bbbb-cccc12345678', '654321', '2025-08-02 14:05:00');
+  `
+]
+
+module.exports = {createDBqueries, dummyDataQueries};
+

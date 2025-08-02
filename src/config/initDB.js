@@ -1,14 +1,17 @@
 const pool = require('./db');
-const dbCreateStrings = require("./dbStructure");
+const {createDBqueries, dummyDataQueries} = require("./dbStructure");
 
 async function initDatabase() {
 	const connection = await pool.getConnection();
 
-	dbCreateStrings.map(async(query) => await connection.query(query));
+	createDBqueries.map(async(query) => await connection.query(query));
 	// await connection.query();
+	console.log("✅ All Tables Ready");
+	
+	dummyDataQueries.map(async (query) => await connection.query(query));
+	console.log("✅ Dummy data inserted");
 
 	connection.release();
-	console.log("✅ All Tables Ready");
 }
 
 module.exports = initDatabase;
