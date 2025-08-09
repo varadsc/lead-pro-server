@@ -4,25 +4,24 @@ const { verifyToken } = require("../utils/commonServices/jwtTokenServices");
 const userAuthMiddleware = async(req, res, next) => {
     const authHeader = req.headers.authorization;
 	if (!authHeader || !authHeader.startsWith('Bearer ')) {
-		return apiErrorResponse(res,401, "Unauthorized");
+		return apiErrorResponse(res, "Unauthorized", 401);
 	}
 	try {
 		const token = authHeader.split(' ')[1];
 		const decoded = verifyToken(token);
-		req.username = decoded;
+		req.empData = decoded;
 		console.log("auth middle ware data ", decoded);
 		
 		next();
 	} catch (err) {
-		return apiErrorResponse(res, 401, "Invalid token");
+		return apiErrorResponse(res, "Invalid token", 401);
 	}
-    next();
 }
 
 const authorizeRoles = (...allowedRoles) => {
 	return (req, res, next) => {
 		if (!req.user || !allowedRoles.includes(req.user.role)) {
-			return apiErrorResponse(res, 403, "Forbidden : Access Denied")
+			return apiErrorResponse(res, "Forbidden : Access Denied", 403);
 		}
 		next();
 	};

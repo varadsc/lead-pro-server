@@ -9,7 +9,12 @@ const app = express();
 
 // Middlewares
 app.use(helmet());
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -18,9 +23,12 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 Object.keys(routesMap).forEach((key) => app.use(`/api${key}`, routesMap[key]));
 
 
-
 app.get("/api", userAuthMiddleware, async(req, res) => {
 	res.send("Hi");
+})
+
+app.get("/", async(req, res) => {
+	res.send("Backend running");
 })
 
 module.exports = app;

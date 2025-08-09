@@ -5,7 +5,6 @@ async function initDatabase() {
 	const connection = await pool.getConnection();
 
 	createDBqueries.map(async(query) => await connection.query(query));
-	// await connection.query();
 	console.log("✅ All Tables Ready");
 	
 	dummyDataQueries.map(async (query) => await connection.query(query));

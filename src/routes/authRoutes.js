@@ -1,12 +1,12 @@
 const express = require("express");
-const { userAuthMiddleware } = require("../midddlewares/authMiddlewares");
-const { userLogin } = require("../controllers/authControllers");
-// const {addUser, userLogin} = require('../controllers/userController');
-// const { adminAuthMiddleware } = require('../middlewares/adminMiddleware');
+const { employeeLogin, adminLogin, requestOtp } = require("../controllers/authControllers");
 const authRouter = express.Router();
 
-authRouter.post("/login", userLogin)
-// employeeRouter.get("/createEmployee", Middleware, Controller);
+authRouter.post("/login", employeeLogin);
+
+authRouter.post("/request-otp", requestOtp);
+
+authRouter.post("/admin-login", adminLogin);
 
 
 module.exports = {authRouter}
