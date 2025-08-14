@@ -49,8 +49,8 @@ const createDBqueries = [`
     account_holder_name VARCHAR(100),
     account_branch_name VARCHAR(100),
     employee_branch_name VARCHAR(100),
-    user_active BOOLEAN,
-    subscription_active BOOLEAN,
+    user_active BOOLEAN DEFAULT FALSE,
+    subscription_active BOOLEAN DEFAULT FALSE,
     employee_form_status VARCHAR(30)
 )
 `,

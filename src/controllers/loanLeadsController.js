@@ -19,12 +19,13 @@ const createLead = async(req, res) => {
 	if(!formId) apiErrorResponse(res, "Could not create lead, please try again")
 
 	apiSuccessResponse(res, "Lead Created with data ", {lead_id : leadID, form_id: formId});
+	// apiSuccessResponse(res, "Test temp success");
 }
 
 const updatePersonalFormFields = async(req, res) => {
-	const {form_id, fieldsToUpdate, saveState, completion_phase} = req.body;
+	const {form_id, fieldsToUpdate, formStatus, completion_phase} = req.body;
 
-	await updatePersonalLoanFormById(form_id, fieldsToUpdate, saveState, completion_phase);
+	await updatePersonalLoanFormById(form_id, fieldsToUpdate, formStatus, completion_phase);
 
 	apiSuccessResponse(res, "Fields updated successfully ");
 }
@@ -34,12 +35,15 @@ const getPersonalFormFields = async(req, res) => {
 
 	if(!formId) apiErrorResponse(res, "Form id required");
 
-	const formData = getPersonalLoanFormData(formId);
+	const formData = await getPersonalLoanFormData(formId);
 
 	if(!formData) apiErrorResponse(res, "Could not get form data");
+	const { pers_application_id, form_state, form_completion_phase, ...responseFormData } = formData;
 
-	
-
+	apiSuccessResponse(res, "Form data fetched successfully", {
+		'current_form_phase' : form_completion_phase,
+		'formData' : responseFormData
+	})
 }
 
 

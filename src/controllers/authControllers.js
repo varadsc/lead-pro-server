@@ -64,8 +64,8 @@ const employeeLogin = async(req, res) => {
 			apiErrorResponse(res);
 		}
 
-		const token = generateToken({ emp_id: employee_id, role: userRole });
-		return apiSuccessResponse(res, "User Logged in ", {token});
+		const authtoken = generateToken({ emp_id: employee_id, role: userRole.role_id });
+		return apiSuccessResponse(res, "User Logged in ", {authtoken});
 	} catch {
 		return apiErrorResponse(res, "Interaln Server Error");
 	}
