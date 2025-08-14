@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { apiErrorResponse, apiSuccessResponse } = require("../utils/commonServices/apiResponseServices");
-const { createEmployeeService, getAllEmployees } = require('../services/employeeServices');
+const { createEmployeeService, getAllEmployees, getEmployeeById, deleteEmployeeById, updateEmployeeById } = require('../services/employeeServices');
 
 const createEmployee = async (req, res) => {
 	try {
@@ -20,15 +20,55 @@ const createEmployee = async (req, res) => {
 }
 
 const getEmployees = async (req, res) => {
-    // try {
-        const employees = await getAllEmployees();
-		apiSuccessResponse(res, "All employees data fetched", {employees})
-        res.json(employees);
-    // } catch (err) {
-    //     console.error(err);
-    //     res.status(500).json({ error: 'Error fetching employees' });
-    // }
+    try {
+
+        const {emp_id} = req.query;
+        if(emp_id) {
+            const employee = await getEmployeeById(emp_id);
+            if(!employee) {
+                apiErrorResponse(res, "Employee data not found", 404);
+            }
+            apiSuccessResponse(res, "Employee data fetched", {employee})
+        }
+        else {
+            const employees = await getAllEmployees();
+            apiSuccessResponse(res, "All employees data fetched", {employees})
+        }
+    } catch (err) {
+        console.error(err);
+        apiErrorResponse(res, "Error Fetching employee data");
+    }
 };
 
+const updateEmployee = async (req, res) => {
+    // try {
+        const result = await updateEmployeeById(req.params.id, req.body);
+        if (result.affectedRows === 0) {
+            apiErrorResponse(res, "Employee not found", 404);
+        }
+        apiSuccessResponse(res, "Employee data updated successfully");
+    // }
+    // catch (err) {
+        console.error(err);
+        apiErrorResponse(res, "Error Updating employee data");
+    // }
 
-module.exports = {createEmployee, getEmployees}
+}
+
+
+const deleteEmployee = async (req, res) => {
+    try {
+        const result = await deleteEmployeeById(req.params.id);
+        if (result.affectedRows === 0) {
+            apiErrorResponse(res, "Employee not found");
+        }
+        apiSuccessResponse(res, "Employee deleted successfully");
+    }
+    catch (err) {
+        console.error(err);
+        apiErrorResponse(res, "Error deleting employee");
+    }
+}
+
+
+module.exports = {createEmployee, getEmployees, deleteEmployee, updateEmployee}

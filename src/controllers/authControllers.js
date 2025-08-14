@@ -98,8 +98,6 @@ const adminLogin = async(req, res) => {
 			apiErrorResponse(res);
 		}
 
-		console.log("userRole", userRole)
-
 		const token = generateToken({ emp_id: employee_id, role: userRole });
 
 		return apiSuccessResponse(res, "Login Successfull", {token});

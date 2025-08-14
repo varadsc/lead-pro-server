@@ -3,7 +3,6 @@ const { verifyToken } = require("../utils/commonServices/jwtTokenServices");
 
 const userAuthMiddleware = async(req, res, next) => {
     const authHeader = req.headers.authorization;
-	console.log(req.headers.authorization , 'reqqq')
 	if (!authHeader || !authHeader.startsWith('Bearer ')) {
 		return apiErrorResponse(res, "Unauthorized", 401);
 	}

@@ -98,9 +98,22 @@ const getEmployeeById = async (emp_id) => {
     return rows[0];
 };
 
-const deleteEmployee = async (emp_id) => {
+const updateEmployeeById = async (emp_id, updateData) => {
+    const fields = Object.keys(updateData)
+        .map(key => `${key} = ?`)
+        .join(', ');
+    const values = Object.values(updateData);
+
+    const [result] = await pool.query(
+        `UPDATE employee SET ${fields} WHERE emp_id = ?`,
+        [...values, emp_id]
+    );
+    return result;
+};
+
+const deleteEmployeeById = async (emp_id) => {
     const [result] = await pool.query(`DELETE FROM employee WHERE emp_id = ?`, [emp_id]);
     return result;
 };
 
-module.exports = {findEmployeeById, findEmployeeByUserName, createEmployeeService, getAllEmployees, getEmployeeById, deleteEmployee}
+module.exports = {findEmployeeById, findEmployeeByUserName, createEmployeeService, getAllEmployees, getEmployeeById, updateEmployeeById, deleteEmployeeById}
